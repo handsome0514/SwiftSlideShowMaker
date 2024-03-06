@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "EditViewController.updateVideoView():EditViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "thumbImageView">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "EditViewController.playAudio():EditViewController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in EditViewController.editDoneButtonPressed(_:):EditViewController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in LoadingViewController.createProject():LoadingViewController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "Project.innerProject(_:_:completion:):Project.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "medias">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "Media.renderImage():Media.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "projectId">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "AudioViewCell.music.didset:AudioViewCell.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "music">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "EditViewController.changeBackgroundAndType():EditViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "ProjectManager.current">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[TVImageView rotate:]:TVImageView.m">
+      </ContextState>
+      <ContextState
+         contextName = "EditViewController.pauseCurrentView():EditViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "currentPlayViewIndex">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "-[SSPlayerController play]:SSPlayerController.m">
+      </ContextState>
+      <ContextState
+         contextName = "closure #1 in closure #2 in LoadingViewController.createProject():LoadingViewController.swift">
+      </ContextState>
+      <ContextState
+         contextName = "MusicBottomView.tableView(_:cellForRowAt:):MusicBottomView.swift">
+      </ContextState>
+      <ContextState
+         contextName = "Project.project(completion1:):Project.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "imageDuration">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+      <ContextState
+         contextName = "EditViewController.addImageView(_:):EditViewController.swift">
+         <PersistentStrings>
+            <PersistentString
+               value = "selectedMediaIndex">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

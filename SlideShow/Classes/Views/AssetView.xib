@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="20037" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina5_5" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="20020"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="AssetView" customModule="SlideShow" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="414" height="260"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="dyY-fU-YUv">
+                    <rect key="frame" x="0.0" y="0.0" width="414" height="130"/>
+                    <subviews>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="T64-kw-aMj">
+                            <rect key="frame" x="84" y="14.666666666666671" width="101" height="101"/>
+                            <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                            <state key="normal" image="ButtonText"/>
+                            <connections>
+                                <action selector="textButtonPressed:" destination="iN0-l3-epB" eventType="touchUpInside" id="09o-1k-HuR"/>
+                            </connections>
+                        </button>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="XCU-XW-hCz">
+                            <rect key="frame" x="229" y="14.666666666666671" width="101" height="101"/>
+                            <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                            <state key="normal" image="ButtonEmoji"/>
+                            <connections>
+                                <action selector="artButtonPressed:" destination="iN0-l3-epB" eventType="touchUpInside" id="V8K-tB-2vv"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <constraints>
+                        <constraint firstItem="XCU-XW-hCz" firstAttribute="centerX" secondItem="dyY-fU-YUv" secondAttribute="centerX" constant="72.5" id="CNh-Dd-Z3C"/>
+                        <constraint firstItem="T64-kw-aMj" firstAttribute="centerY" secondItem="dyY-fU-YUv" secondAttribute="centerY" id="Dki-fs-yVd"/>
+                        <constraint firstItem="T64-kw-aMj" firstAttribute="centerX" secondItem="dyY-fU-YUv" secondAttribute="centerX" constant="-72.5" id="ShL-Wg-Wsk"/>
+                        <constraint firstItem="XCU-XW-hCz" firstAttribute="centerY" secondItem="dyY-fU-YUv" secondAttribute="centerY" id="evg-Dm-L53"/>
+                    </constraints>
+                </view>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="6Gr-da-kFT">
+                    <rect key="frame" x="0.0" y="130" width="414" height="130"/>
+                    <subviews>
+                        <button hidden="YES" opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="8q4-yi-Rao">
+                            <rect key="frame" x="156" y="14" width="101" height="101"/>
+                            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                            <state key="normal" image="ButtonGifs"/>
+                            <connections>
+                                <action selector="gifButtonPressed:" destination="iN0-l3-epB" eventType="touchUpInside" id="dve-VI-Xkc"/>
+                            </connections>
+                        </button>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="fCN-Sk-q3m">
+                            <rect key="frame" x="156.66666666666666" y="14.666666666666657" width="100.99999999999997" height="101"/>
+                            <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                            <state key="normal" image="ButtonDone"/>
+                            <connections>
+                                <action selector="backButtonPressed:" destination="iN0-l3-epB" eventType="touchUpInside" id="XqF-kX-FCm"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <constraints>
+                        <constraint firstItem="fCN-Sk-q3m" firstAttribute="centerY" secondItem="6Gr-da-kFT" secondAttribute="centerY" id="PYK-PZ-e1Z"/>
+                        <constraint firstItem="fCN-Sk-q3m" firstAttribute="centerX" secondItem="6Gr-da-kFT" secondAttribute="centerX" id="cGQ-uF-FHT"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <constraints>
+                <constraint firstItem="6Gr-da-kFT" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="2SF-gq-dMA"/>
+                <constraint firstItem="dyY-fU-YUv" firstAttribute="top" secondItem="vUN-kp-3ea" secondAttribute="top" id="3Lb-Qp-dPV"/>
+                <constraint firstItem="dyY-fU-YUv" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="4SI-Xm-gI8"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="6Gr-da-kFT" secondAttribute="bottom" id="9aY-ez-eP6"/>
+                <constraint firstItem="dyY-fU-YUv" firstAttribute="trailing" secondItem="vUN-kp-3ea" secondAttribute="trailing" id="Rj1-Dq-7Bf"/>
+                <constraint firstItem="6Gr-da-kFT" firstAttribute="height" secondItem="dyY-fU-YUv" secondAttribute="height" id="XF8-wg-vm7"/>
+                <constraint firstItem="6Gr-da-kFT" firstAttribute="trailing" secondItem="vUN-kp-3ea" secondAttribute="trailing" id="aaV-F7-ym2"/>
+                <constraint firstItem="6Gr-da-kFT" firstAttribute="top" secondItem="dyY-fU-YUv" secondAttribute="bottom" id="x16-ym-J2o"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <point key="canvasLocation" x="131.8840579710145" y="75"/>
+        </view>
+        <view contentMode="scaleToFill" id="57S-nf-MUi" customClass="AssetView" customModule="SlideShow" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="768" height="360"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="AgV-Fn-RoP">
+                    <rect key="frame" x="0.0" y="0.0" width="768" height="180"/>
+                    <subviews>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="NaN-g7-YP2">
+                            <rect key="frame" x="208.66666666666663" y="39.666666666666657" width="101" height="101"/>
+                            <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                            <state key="normal" image="ButtonText"/>
+                            <connections>
+                                <action selector="textButtonPressed:" destination="57S-nf-MUi" eventType="touchUpInside" id="DP9-ID-dXM"/>
+                            </connections>
+                        </button>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="NRq-oz-TUl">
+                            <rect key="frame" x="333.66666666666669" y="39.666666666666657" width="101" height="101"/>
+                            <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                            <state key="normal" image="ButtonEmoji"/>
+                            <connections>
+                                <action selector="artButtonPressed:" destination="57S-nf-MUi" eventType="touchUpInside" id="l6a-Pn-Nae"/>
+                            </connections>
+                        </button>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="92C-aG-ZrN">
+                            <rect key="frame" x="458.66666666666669" y="39.666666666666657" width="101.00000000000006" height="101"/>
+                            <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                            <state key="normal" image="ButtonGifs"/>
+                            <connections>
+                                <action selector="gifButtonPressed:" destination="57S-nf-MUi" eventType="touchUpInside" id="UmG-JC-Pkq"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <constraints>
+                        <constraint firstItem="NRq-oz-TUl" firstAttribute="centerX" secondItem="AgV-Fn-RoP" secondAttribute="centerX" id="0CL-ke-4RM"/>
+                        <constraint firstItem="92C-aG-ZrN" firstAttribute="leading" secondItem="NRq-oz-TUl" secondAttribute="trailing" constant="24" id="3ai-0k-pO8"/>
+                        <constraint firstItem="NRq-oz-TUl" firstAttribute="leading" secondItem="NaN-g7-YP2" secondAttribute="trailing" constant="24" id="WFt-RE-JNd"/>
+                        <constraint firstItem="92C-aG-ZrN" firstAttribute="centerY" secondItem="NRq-oz-TUl" secondAttribute="centerY" id="aGD-M0-sme"/>
+                        <constraint firstItem="NRq-oz-TUl" firstAttribute="centerY" secondItem="AgV-Fn-RoP" secondAttribute="centerY" id="dxO-to-MjV"/>
+                        <constraint firstItem="NaN-g7-YP2" firstAttribute="centerY" secondItem="NRq-oz-TUl" secondAttribute="centerY" id="uCL-bi-YW5"/>
+                    </constraints>
+                </view>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="zUQ-dR-yVl">
+                    <rect key="frame" x="0.0" y="180" width="768" height="180"/>
+                    <subviews>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="K4M-SK-xYB">
+                            <rect key="frame" x="333.66666666666669" y="39.666666666666657" width="101" height="101"/>
+                            <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                            <state key="normal" image="ButtonDone"/>
+                            <connections>
+                                <action selector="backButtonPressed:" destination="57S-nf-MUi" eventType="touchUpInside" id="nJy-VC-nMo"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <constraints>
+                        <constraint firstItem="K4M-SK-xYB" firstAttribute="centerX" secondItem="zUQ-dR-yVl" secondAttribute="centerX" id="qMK-Gd-Rnl"/>
+                        <constraint firstItem="K4M-SK-xYB" firstAttribute="centerY" secondItem="zUQ-dR-yVl" secondAttribute="centerY" id="sIx-Kd-vbc"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="17T-ZD-1ak"/>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <constraints>
+                <constraint firstItem="17T-ZD-1ak" firstAttribute="bottom" secondItem="zUQ-dR-yVl" secondAttribute="bottom" id="0aI-PK-NMG"/>
+                <constraint firstItem="zUQ-dR-yVl" firstAttribute="leading" secondItem="17T-ZD-1ak" secondAttribute="leading" id="6W3-Ke-JjO"/>
+                <constraint firstItem="zUQ-dR-yVl" firstAttribute="height" secondItem="AgV-Fn-RoP" secondAttribute="height" id="JEv-gP-chc"/>
+                <constraint firstItem="zUQ-dR-yVl" firstAttribute="top" secondItem="AgV-Fn-RoP" secondAttribute="bottom" id="SHZ-wd-vhu"/>
+                <constraint firstItem="17T-ZD-1ak" firstAttribute="trailing" secondItem="zUQ-dR-yVl" secondAttribute="trailing" id="X0g-Hx-lID"/>
+                <constraint firstItem="17T-ZD-1ak" firstAttribute="trailing" secondItem="AgV-Fn-RoP" secondAttribute="trailing" id="aXn-Ew-kwK"/>
+                <constraint firstItem="AgV-Fn-RoP" firstAttribute="leading" secondItem="17T-ZD-1ak" secondAttribute="leading" id="fbH-Cx-Flo"/>
+                <constraint firstItem="AgV-Fn-RoP" firstAttribute="top" secondItem="17T-ZD-1ak" secondAttribute="top" id="w4N-Zp-VKw"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <point key="canvasLocation" x="132" y="412"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="ButtonDone" width="100.66666412353516" height="100.66666412353516"/>
+        <image name="ButtonEmoji" width="100.66666412353516" height="100.66666412353516"/>
+        <image name="ButtonGifs" width="100.66666412353516" height="100.66666412353516"/>
+        <image name="ButtonText" width="100.66666412353516" height="100.66666412353516"/>
+    </resources>
+</document>

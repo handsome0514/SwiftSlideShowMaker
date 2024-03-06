@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="19455" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="19454"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <customFonts key="customFonts">
+        <array key="Poppins-Bold.ttf">
+            <string>Poppins-Bold</string>
+        </array>
+        <array key="Poppins-Regular.ttf">
+            <string>Poppins-Regular</string>
+        </array>
+    </customFonts>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="Mj3-s0-VYD" customClass="ResolutionView" customModule="SlideShow" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="414" height="436"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Resolution" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="cFB-QN-sJX">
+                    <rect key="frame" x="141.5" y="20" width="131" height="24"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="24" id="0qH-A8-TwB"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" name="Poppins-Bold" family="Poppins" pointSize="24"/>
+                    <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" minimumScaleFactor="0.5" translatesAutoresizingMaskIntoConstraints="NO" id="pvm-Co-0PA">
+                    <rect key="frame" x="60" y="52" width="294.5" height="40"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="40" id="KHp-t6-dm2"/>
+                    </constraints>
+                    <string key="text">The higher the resolution, the better the quality of
+the exported video</string>
+                    <fontDescription key="fontDescription" name="Poppins-Regular" family="Poppins" pointSize="12"/>
+                    <color key="textColor" red="0.25490196079999999" green="0.25098039220000001" blue="0.25882352939999997" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" style="plain" separatorStyle="none" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" translatesAutoresizingMaskIntoConstraints="NO" id="X8X-fg-I40">
+                    <rect key="frame" x="0.0" y="116" width="414" height="296"/>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <connections>
+                        <outlet property="dataSource" destination="Mj3-s0-VYD" id="ZaX-Op-0qP"/>
+                        <outlet property="delegate" destination="Mj3-s0-VYD" id="twK-Qi-FoF"/>
+                    </connections>
+                </tableView>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="v9F-NK-vXS"/>
+            <color key="backgroundColor" red="0.45417028669999998" green="0.75419920679999997" blue="0.80308938029999999" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+            <constraints>
+                <constraint firstItem="cFB-QN-sJX" firstAttribute="centerX" secondItem="Mj3-s0-VYD" secondAttribute="centerX" id="5fD-p0-GVU"/>
+                <constraint firstItem="v9F-NK-vXS" firstAttribute="trailing" secondItem="X8X-fg-I40" secondAttribute="trailing" id="6YQ-hD-ANa"/>
+                <constraint firstItem="v9F-NK-vXS" firstAttribute="bottom" secondItem="X8X-fg-I40" secondAttribute="bottom" constant="24" id="Let-s8-CEm"/>
+                <constraint firstItem="pvm-Co-0PA" firstAttribute="centerX" secondItem="Mj3-s0-VYD" secondAttribute="centerX" id="eXq-pN-7ro"/>
+                <constraint firstItem="X8X-fg-I40" firstAttribute="leading" secondItem="v9F-NK-vXS" secondAttribute="leading" id="gyC-dy-Rfv"/>
+                <constraint firstItem="cFB-QN-sJX" firstAttribute="top" secondItem="Mj3-s0-VYD" secondAttribute="top" constant="20" id="hxR-SS-bNG"/>
+                <constraint firstItem="X8X-fg-I40" firstAttribute="top" secondItem="pvm-Co-0PA" secondAttribute="bottom" constant="24" id="qqg-oP-ZgC"/>
+                <constraint firstItem="pvm-Co-0PA" firstAttribute="top" secondItem="cFB-QN-sJX" secondAttribute="bottom" constant="8" id="x8E-4m-lxI"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <userDefinedRuntimeAttributes>
+                <userDefinedRuntimeAttribute type="string" keyPath="layer.cornerRadius" value="36"/>
+                <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
+            </userDefinedRuntimeAttributes>
+            <connections>
+                <outlet property="tableView" destination="X8X-fg-I40" id="wtu-YI-WZj"/>
+            </connections>
+            <point key="canvasLocation" x="131.8840579710145" y="170.75892857142856"/>
+        </view>
+    </objects>
+</document>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="20037" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina5_5" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="20020"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="EditBoardView" customModule="SlideShow" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="414" height="288"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="QRP-Ij-1I1">
+                    <rect key="frame" x="0.0" y="0.0" width="414" height="48"/>
+                    <subviews>
+                        <button opaque="NO" tag="10" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="rpO-Hg-eAS">
+                            <rect key="frame" x="0.0" y="0.0" width="103.66666666666667" height="48"/>
+                            <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                            <state key="normal" image="IconAdd"/>
+                            <state key="selected" image="IconAddSelected"/>
+                            <connections>
+                                <action selector="addButtonPressed:" destination="iN0-l3-epB" eventType="touchUpInside" id="yIB-bY-AS3"/>
+                            </connections>
+                        </button>
+                        <button opaque="NO" tag="11" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="sDw-T6-PQs">
+                            <rect key="frame" x="103.66666666666669" y="0.0" width="103.33333333333331" height="48"/>
+                            <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                            <state key="normal" image="IconTrim"/>
+                            <state key="selected" image="IconTrimSelected"/>
+                            <connections>
+                                <action selector="trimButtonPressed:" destination="iN0-l3-epB" eventType="touchUpInside" id="n5k-2T-86c"/>
+                            </connections>
+                        </button>
+                        <button opaque="NO" tag="12" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="eVq-fL-jdc">
+                            <rect key="frame" x="206.99999999999997" y="0.0" width="103.66666666666666" height="48"/>
+                            <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                            <state key="normal" image="IconTime"/>
+                            <state key="selected" image="IconTimeSelected"/>
+                            <connections>
+                                <action selector="timeButtonPressed:" destination="iN0-l3-epB" eventType="touchUpInside" id="qJl-PK-cyB"/>
+                            </connections>
+                        </button>
+                        <button opaque="NO" tag="13" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="7gI-Wi-IjM">
+                            <rect key="frame" x="310.66666666666669" y="0.0" width="0.0" height="48"/>
+                            <constraints>
+                                <constraint firstAttribute="width" id="XZx-Dv-MMw"/>
+                            </constraints>
+                            <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                            <state key="normal" image="IconSize"/>
+                            <state key="selected" image="IconSizeSelected"/>
+                            <connections>
+                                <action selector="sizeButtonPressed:" destination="iN0-l3-epB" eventType="touchUpInside" id="LHv-bi-0ty"/>
+                            </connections>
+                        </button>
+                        <button opaque="NO" tag="14" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="I1b-tw-Vdt">
+                            <rect key="frame" x="310.66666666666669" y="0.0" width="103.33333333333331" height="48"/>
+                            <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
+                            <state key="normal" image="IconMusic"/>
+                            <state key="selected" image="IconMusicSelected"/>
+                            <connections>
+                                <action selector="musicButtonPressed:" destination="iN0-l3-epB" eventType="touchUpInside" id="kRC-Iv-Qid"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <constraints>
+                        <constraint firstItem="eVq-fL-jdc" firstAttribute="width" secondItem="rpO-Hg-eAS" secondAttribute="width" id="1QE-Th-Ida"/>
+                        <constraint firstItem="7gI-Wi-IjM" firstAttribute="leading" secondItem="eVq-fL-jdc" secondAttribute="trailing" id="2td-QJ-FXC"/>
+                        <constraint firstAttribute="bottom" secondItem="sDw-T6-PQs" secondAttribute="bottom" id="3eE-9L-vCE"/>
+                        <constraint firstItem="eVq-fL-jdc" firstAttribute="top" secondItem="QRP-Ij-1I1" secondAttribute="top" id="6bY-BO-h1E"/>
+                        <constraint firstAttribute="height" constant="48" id="7kf-df-Yfw"/>
+                        <constraint firstItem="I1b-tw-Vdt" firstAttribute="width" secondItem="rpO-Hg-eAS" secondAttribute="width" id="88T-3s-Bpc"/>
+                        <constraint firstItem="I1b-tw-Vdt" firstAttribute="leading" secondItem="7gI-Wi-IjM" secondAttribute="trailing" id="9Lk-ih-ri2"/>
+                        <constraint firstItem="sDw-T6-PQs" firstAttribute="top" secondItem="QRP-Ij-1I1" secondAttribute="top" id="F0v-02-uTL"/>
+                        <constraint firstAttribute="bottom" secondItem="I1b-tw-Vdt" secondAttribute="bottom" id="I5c-5u-0MP"/>
+                        <constraint firstItem="7gI-Wi-IjM" firstAttribute="top" secondItem="QRP-Ij-1I1" secondAttribute="top" id="KF3-h8-EHc"/>
+                        <constraint firstItem="eVq-fL-jdc" firstAttribute="leading" secondItem="sDw-T6-PQs" secondAttribute="trailing" id="MjT-ns-OpC"/>
+                        <constraint firstItem="I1b-tw-Vdt" firstAttribute="top" secondItem="QRP-Ij-1I1" secondAttribute="top" id="Sk2-o2-LIE"/>
+                        <constraint firstItem="sDw-T6-PQs" firstAttribute="leading" secondItem="rpO-Hg-eAS" secondAttribute="trailing" id="Xmz-r5-hPP"/>
+                        <constraint firstAttribute="bottom" secondItem="rpO-Hg-eAS" secondAttribute="bottom" id="bdo-sH-VlZ"/>
+                        <constraint firstAttribute="bottom" secondItem="eVq-fL-jdc" secondAttribute="bottom" id="d4X-ny-yAJ"/>
+                        <constraint firstItem="rpO-Hg-eAS" firstAttribute="top" secondItem="QRP-Ij-1I1" secondAttribute="top" id="emN-MY-iWy"/>
+                        <constraint firstItem="rpO-Hg-eAS" firstAttribute="leading" secondItem="QRP-Ij-1I1" secondAttribute="leading" id="lD6-ER-KTt"/>
+                        <constraint firstAttribute="bottom" secondItem="7gI-Wi-IjM" secondAttribute="bottom" id="tH2-9g-a4Q"/>
+                        <constraint firstAttribute="trailing" secondItem="I1b-tw-Vdt" secondAttribute="trailing" id="tQG-zq-awb"/>
+                        <constraint firstItem="sDw-T6-PQs" firstAttribute="width" secondItem="rpO-Hg-eAS" secondAttribute="width" id="ymz-O6-8qd"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <constraints>
+                <constraint firstItem="QRP-Ij-1I1" firstAttribute="top" secondItem="vUN-kp-3ea" secondAttribute="top" id="01b-vQ-SGd"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="QRP-Ij-1I1" secondAttribute="trailing" id="2KK-FI-ocA"/>
+                <constraint firstItem="QRP-Ij-1I1" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="w1x-wO-FBW"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="iconsView" destination="QRP-Ij-1I1" id="9dt-aS-xDm"/>
+            </connections>
+            <point key="canvasLocation" x="131.8840579710145" y="75.815217391304358"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="IconAdd" width="40" height="40"/>
+        <image name="IconAddSelected" width="40" height="40"/>
+        <image name="IconMusic" width="40" height="40"/>
+        <image name="IconMusicSelected" width="40" height="40"/>
+        <image name="IconSize" width="40" height="40"/>
+        <image name="IconSizeSelected" width="40" height="40"/>
+        <image name="IconTime" width="40" height="40"/>
+        <image name="IconTimeSelected" width="40" height="40"/>
+        <image name="IconTrim" width="40" height="40"/>
+        <image name="IconTrimSelected" width="40" height="40"/>
+    </resources>
+</document>

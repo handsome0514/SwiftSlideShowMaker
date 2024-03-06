@@ -1,0 +1,2050 @@
+//
+//  EditViewController.swift
+//  SlideShow
+//
+//  Created by Hua Wan on 9/20/21.
+//
+
+import UIKit
+import CoreServices
+import Photos
+import SwiftColor
+import AVKit
+import SVProgressHUD
+import RealmSwift
+import GPUImage
+
+enum TabItem: Int {
+    case edit = 101
+    case effect = 102
+    case music = 103
+    case arrange = 104
+    case time = 105
+}
+
+let TEXTVIEW_FRAME = CGRect(x: 0, y: 0, width: 140, height: 100)
+let TEXT_OFFSET: CGFloat = 20
+
+@objc class EditViewController: UIViewController {
+    
+    var player: AVPlayer! = nil
+    var playerItem : AVPlayerItem! = nil
+    var currentPlayViewIndex: Int = 0
+    
+    var frames:[UIImage] = []
+    private var generator:AVAssetImageGenerator?
+    
+    @IBOutlet weak var editDoneButton: UIButton!
+    @IBOutlet weak var timelineButton: UIButton!
+    @IBOutlet weak var backButton: UIButton!
+    @IBOutlet weak var shareButton: UIButton!
+    @IBOutlet weak var editView: UIView!
+    @IBOutlet weak var videoView: UIView!
+    @IBOutlet weak var editButton: UIButton!
+    @IBOutlet weak var blurImageView: UIImageView!
+    @IBOutlet weak var thumbImageView: UIImageView!
+    @IBOutlet weak var tabView: UIView!
+    @IBOutlet weak var controlsView: UIView!
+    @IBOutlet weak var playsView: UIView!
+    @IBOutlet weak var timeLabel: UILabel!
+    @IBOutlet weak var seekSlider: UISlider!
+    @IBOutlet weak var playButton: UIButton!
+    @IBOutlet weak var assetButtonView: UIView!
+    @IBOutlet weak var previewEndButton: UIButton!
+    @IBOutlet weak var artButton: UIButton!
+    @IBOutlet weak var textButton: UIButton!
+    @IBOutlet weak var textDoneButton: UIButton!
+    
+    @IBOutlet weak var videoPlayerView: VideoPlayerView!
+    @IBOutlet weak var trimPlayView: UIView!
+    @IBOutlet weak var trimPlayButton: UIButton!
+    
+    @IBOutlet weak var sheetMenuView: UIView!
+    @IBOutlet weak var menuUndoView: UIView!
+    @IBOutlet weak var menuRedoView: UIView!
+    @IBOutlet weak var menuRevertView: UIView!
+    @IBOutlet weak var viewPlayerView: UIView!
+    @IBOutlet weak var previewPlayerView: SSPlayer!
+    
+    @IBOutlet var orderMenuView: UIView!
+    @IBOutlet weak var orderCustomButton: UIButton!
+    @IBOutlet weak var orderShuffleButton: UIButton!
+    @IBOutlet weak var orderDateButton: UIButton!
+    @IBOutlet weak var orderCheckImageView: UIImageView!
+    
+    @IBOutlet weak var bottomMenuConstraint: NSLayoutConstraint!
+    @IBOutlet weak var bottomRevertConstraint: NSLayoutConstraint!
+    @IBOutlet weak var widthOrderConstraint: NSLayoutConstraint!
+    @IBOutlet weak var topOrderCheckConstraint: NSLayoutConstraint!
+    @IBOutlet weak var heightControlsConstraint: NSLayoutConstraint!
+    @IBOutlet weak var heightTabConstraint: NSLayoutConstraint!
+    
+    fileprivate var lastBottomView: UIView? = nil
+    fileprivate var popupView: FFPopup!
+    fileprivate var previewController: SSPlayerController!
+    
+    
+    
+    fileprivate lazy var playerView: UIView = {
+        return UIView(frame: .zero)
+    }()
+    
+    fileprivate lazy var mediasView: EditView = {
+        let view = EditView.loadFromNib()
+        //view.frame = CGRect(x: 0, y: playsView.frame.maxY, width: controlsView.frame.width, height: controlsView.frame.height - playsView.frame.maxY)
+        let height = controlsView.frame.height - playsView.frame.maxY
+        view.frame = CGRect(x: 0, y: tabView.frame.origin.y - height, width: UIScreen.main.bounds.width, height: height)
+        view.project = ProjectManager.current
+        view.delegate = self
+        view.backgroundColor = .clear
+        //controlsView.addSubview(view)
+        self.view.addSubview(view)
+        return view
+    }()
+    
+    fileprivate lazy var effectView: EffectView = {
+        let view = EffectView.loadFromNib()
+        view.frame = CGRect(x: 0, y: playsView.frame.maxY, width: controlsView.frame.width, height: controlsView.frame.height - playsView.frame.maxY)
+        controlsView.addSubview(view)
+        return view
+    }()
+    
+    fileprivate lazy var musicBottomView: MusicBottomView = {
+        let view = MusicBottomView.loadFromNib()
+        let height = controlsView.frame.height - playsView.frame.maxY
+        view.frame = CGRect(x: 0, y: tabView.frame.origin.y - height, width: UIScreen.main.bounds.width, height: height)
+        //view.backgroundColor = .clear
+        view.didSelectMusic = {
+            let storyboard = UIStoryboard(name: UIDevice.current.userInterfaceIdiom == .phone ? "Edit" : "Edit_iPad", bundle: nil)
+            let controller = storyboard.instantiateViewController(withIdentifier: "MusicViewController") as! MusicViewController
+            controller.musicPickerHandler = { name, url in
+                let project = ProjectManager.current
+                //let asset = AVURLAsset(url: url)
+                do {
+                    try sharedRealm.write {
+                        let music = Music()
+                        music.projectId = project.id
+                        music.name = name
+                        if url.absoluteString.contains("ipod-library://") {
+                            music.itunespath = url.absoluteString
+                            music.filename = ""
+                        } else {
+                            music.itunespath = ""
+                            music.filename = url.lastPathComponent
+                        }
+                        music.start = 0
+                        music.end = Float(project.duration())
+                        project.musics.append(music)
+                        self.musicBottomView.reloadData()
+                    }
+                } catch {
+                    print(error.localizedDescription)
+                }
+            }
+            let navcontroller = UINavigationController(rootViewController: controller)
+            navcontroller.modalPresentationStyle = .fullScreen
+            navcontroller.isNavigationBarHidden = true
+            self.present(navcontroller, animated: true, completion: nil)
+        }
+        view.didSelectRecord = {
+            self.musicBottomView.isHidden = true
+            self.tabView.isHidden = true
+            self.audioRecordView.isHidden = false
+            self.audioRecordView.reset()
+            self.editButton.isHidden = true
+            self.shareButton.isHidden = true
+            self.editDoneButton.isHidden = false
+        }
+        self.view.addSubview(view)
+        return view
+    }()
+    
+    fileprivate lazy var audioRecordView: AudioRecorderView = {
+        let view = AudioRecorderView.loadFromNib()
+        var frame = self.musicBottomView.frame
+        frame.size.height += self.tabView.frame.height
+        view.frame = frame
+        view.isHidden = true
+        self.view.addSubview(view)
+        return view
+    }()
+    
+    fileprivate lazy var arrangeView: ArrangeView = {
+        let view = ArrangeView.loadFromNib()
+        view.frame = CGRect(x: 0, y: playsView.frame.maxY, width: controlsView.frame.width, height: controlsView.frame.height - playsView.frame.maxY)
+        view.project = ProjectManager.current
+        view.delegate = self
+        controlsView.addSubview(view)
+        return view
+    }()
+    
+    fileprivate lazy var timeView: TimeView = {
+        let view = TimeView.loadFromNib()
+        view.frame = CGRect(x: 0, y: playsView.frame.maxY, width: controlsView.frame.width, height: controlsView.frame.height - playsView.frame.maxY)
+        view.project = ProjectManager.current
+        view.delegate = self
+        view.parentViewController = self
+        controlsView.addSubview(view)
+        return view
+    }()
+    
+    fileprivate lazy var textsView: TextsView = {
+        let textsView = TextsView.loadFromNib()
+        let height: CGFloat = UIDevice.current.userInterfaceIdiom == .phone ? 260 : 340
+        let frame = CGRect(x: 0, y: self.view.frame.height - height, width: self.view.frame.width, height: height)
+        textsView.frame = frame
+        textsView.delegate = self
+        return textsView
+    }()
+    
+    fileprivate lazy var editBoardView: EditBoardView = {
+        let view = EditBoardView.loadFromNib()
+        let height = controlsView.frame.height - playsView.frame.maxY + tabView.frame.height
+        view.frame = CGRect(x: 0, y: self.view.frame.height - self.view.safeAreaInsets.bottom - height, width: UIScreen.main.bounds.width, height: height)
+        view.project = ProjectManager.current
+        view.cropViewDelegate = self
+        view.timeViewDelegate = self
+        view.artsViewDelegate = self
+        view.delegate = self
+        view.parentViewController = self
+        view.backgroundColor = .clear
+        return view
+    }()
+    
+    fileprivate lazy var trimPlayerView: VideoPlayerView = {
+        let view = VideoPlayerView(frame: .zero)
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handlePauseTrimVideo))
+        view.addGestureRecognizer(tapGesture)
+        return view
+    }()
+    
+    fileprivate var selectedMediaIndex = 0
+    fileprivate var lastSelectedIndex = 0
+    fileprivate var selectedTabItem: TabItem = .edit
+    fileprivate var insertMediaIndex: Int = -1
+    
+    fileprivate var activeImageView: TVImageView? = nil
+    fileprivate var activeTextView: TVTextView? = nil
+    fileprivate var previousPoint = CGPoint.zero
+    fileprivate var arrayImageViews: [TVImageView] = []
+    fileprivate var arrayTextViews: [TVTextView] = []
+    
+    fileprivate var prevSeekValue: Float = 0
+    fileprivate var recordIndex = 1
+    
+    fileprivate var isFirstLayout = true
+    
+    override var preferredStatusBarStyle: UIStatusBarStyle {
+        return .lightContent
+    }
+    
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        return [.portrait, .portraitUpsideDown]
+    }
+    
+    override var shouldAutorotate: Bool {
+        return false
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        editViewCtrl = self
+
+        // Do any additional setup after loading the view.
+        
+        widthOrderConstraint.constant = UIScreen.main.bounds.width - 108
+        
+        timelineButton.isHidden = true
+        
+        textsView.loadFonts()
+        
+        seekSlider.setThumbImage(UIImage(named: "SliderThumb"), for: .normal)
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(deactivateViews(tapGesture:)))
+        tapGesture.numberOfTapsRequired = 1
+        editView.addGestureRecognizer(tapGesture)
+        
+        effectView.isHidden = true
+        
+        orderCustomButton.titleEdgeInsets = UIEdgeInsets(top: -10, left: 44, bottom: 10, right: -44)
+        orderShuffleButton.titleEdgeInsets = UIEdgeInsets(top: -10, left: 44, bottom: 10, right: -44)
+        orderDateButton.titleEdgeInsets = UIEdgeInsets(top: -12, left: 44, bottom: 12, right: -44)
+        
+        selectedTabItem = .edit
+        
+        
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(handlePreviewPlaying(_:)), name: NSNotification.Name(rawValue: "SSPlayerControllerPlaying"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handlePreviewStopped(_:)), name: NSNotification.Name(rawValue: "SSPlayerControllerStopped"), object: nil)
+        
+        
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        self.loadProject()
+        
+        view.bringSubviewToFront(orderMenuView)
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        if isFirstLayout {
+            isFirstLayout = false
+            
+            deselectAllTabs()
+            selectTabItem(.edit)
+            
+            mediasView.project = ProjectManager.current
+            
+            updateVideoView()
+            updateAssets(ProjectManager.current.medias[selectedMediaIndex])
+            
+            sheetMenuView.roundCorners(corners: [.topLeft, .topRight], radius: 20)
+            
+            bottomRevertConstraint.constant = self.view.safeAreaInsets.bottom + 20
+            
+            seekSlider.minimumValue = 0;
+            updateSeekSlider()
+            updateTimeLabel()
+            updateOrderView()
+            
+            musicBottomView.isHidden = true
+        }
+    }
+    
+    fileprivate func tabBarView(for tag: Int) -> UIView {
+        return tabView.viewWithTag(tag)!
+    }
+    
+    fileprivate func deselectTabView(_ tabItem: TabItem) {
+        if let view = tabView.viewWithTag(tabItem.rawValue) {
+            for subview in view.subviews {
+                if let imageView = subview as? UIImageView {
+                    imageView.isHighlighted = false
+                }
+                if let label = subview as? UILabel {
+                    label.isHidden = true
+                }
+            }
+            for constraint in view.constraints {
+                if constraint.firstItem is UILabel, constraint.secondItem is UIImageView {
+                    if UIDevice.current.userInterfaceIdiom == .phone {
+                        constraint.constant = -10
+                    } else {
+                        constraint.constant = -4
+                    }
+                }
+            }
+        }
+    }
+    
+    fileprivate func selectTabItem(_ tabItem: TabItem) {
+        deselectAllTabs()
+        if let view = tabView.viewWithTag(tabItem.rawValue) {
+            for subview in view.subviews {
+                if let imageView = subview as? UIImageView {
+                    imageView.isHighlighted = true
+                }
+                if let label = subview as? UILabel {
+                    label.isHidden = false
+                }
+            }
+            for constraint in view.constraints {
+                if constraint.firstItem is UILabel, constraint.secondItem is UIImageView {
+                    if UIDevice.current.userInterfaceIdiom == .phone {
+                        constraint.constant = 0
+                    } else {
+                        constraint.constant = 8
+                    }
+                }
+            }
+        }
+    }
+    
+    fileprivate func deselectAllTabs() {
+        for item in TabItem.edit.rawValue...TabItem.time.rawValue {
+            deselectTabView(TabItem(rawValue: item)!)
+        }
+    }
+    
+    fileprivate func hideAllSubviews() {
+        mediasView.isHidden = true
+        effectView.isHidden = true
+        musicBottomView.isHidden = true
+        arrangeView.isHidden = true
+        timeView.isHidden = true
+    }
+    
+    fileprivate func showBottomSubview() {
+        
+    }
+    
+    fileprivate func updateTimeLabel() {
+        let duration = Int(ProjectManager.current.duration())
+        timeLabel.text = Utilities.timeString(duration)
+    }
+    
+    fileprivate func showBoardView(_ tabItem: TabItem) {
+        hideAllSubviews()
+        switch tabItem {
+        case .edit:
+            mediasView.isHidden = false
+            
+        case .effect:
+            effectView.media = ProjectManager.current.medias[selectedMediaIndex]
+            effectView.isHidden = false
+            
+        case .music:
+            //musicView.isHidden = false
+            musicBottomView.isHidden = false
+            
+        case .arrange:
+            arrangeView.isHidden = false
+            
+        case .time:
+            timeView.isHidden = false
+            timeView.lockButton.isHidden = PurchaseManager.sharedManager.isPurchased()
+        }
+    }
+    
+    fileprivate func updateVideoView() {
+        let project = ProjectManager.current
+        let ratio = RatioType(rawValue: project.ratio)!.ratio
+        videoView.frame = frame(for: ratio, parentView: editView)
+        let media = project.medias[selectedMediaIndex]
+        let mediaType = MediaType(rawValue: media.type)!
+        if mediaType == .image {
+            thumbImageView.image = UIImage(contentsOfFile: media.path())
+        } else {
+            thumbImageView.image = Utilities.generateThumbImage(videoURL: URL(fileURLWithPath: media.path()))
+        }
+        blurImageView.image = thumbImageView.image!.blurImage()
+        thumbImageView.transform = .identity
+        blurImageView.transform = .identity
+        thumbImageView.frame = frame(for: thumbImageView.image!.size.width / thumbImageView.image!.size.height, parentView: videoView)
+        blurImageView.frame = CGRect(x: 0, y: 0, width: videoView.frame.width, height: videoView.frame.height)
+        if media.degree == 90 || media.degree == 270 {
+            blurImageView.frame = CGRect(x: 0, y: 0, width: videoView.frame.height, height: videoView.frame.width)
+        }
+        let angle = media.degree * .pi / 180.0
+        let rotatedTransform = CGAffineTransform.identity.rotated(by: CGFloat(angle))
+        blurImageView.transform = blurImageView.transform.concatenating(rotatedTransform)
+        
+        if media.isHorizontalFlip {
+            if media.degree == 0 || media.degree == 180 {
+                let flipTransform = CGAffineTransform.identity.scaledBy(x: -1.0, y: 1.0)
+                blurImageView.transform = blurImageView.transform.concatenating(flipTransform)
+            } else if media.degree == 90 || media.degree == 270 {
+                let flipTransform = CGAffineTransform.identity.scaledBy(x: 1.0, y: -1.0)
+                blurImageView.transform = blurImageView.transform.concatenating(flipTransform)
+            }
+        }
+        if media.isVerticalFlip {
+            if media.degree == 0 || media.degree == 180 {
+                let flipTransform = CGAffineTransform.identity.scaledBy(x: 1.0, y: -1.0)
+                blurImageView.transform = blurImageView.transform.concatenating(flipTransform)
+            } else if media.degree == 90 || media.degree == 270 {
+                let flipTransform = CGAffineTransform.identity.scaledBy(x: -1.0, y: 1.0)
+                blurImageView.transform = blurImageView.transform.concatenating(flipTransform)
+            }
+        }
+        blurImageView.center = CGPoint(x: videoView.frame.width / 2.0, y: videoView.frame.height / 2.0)
+        
+        if project.colorIndex >= 0 {
+            blurImageView.isHidden = true
+            videoView.backgroundColor = UIColor(hexInt: APP_ARRAY_COLORS[project.colorIndex])
+        } else {
+            blurImageView.isHidden = false
+        }
+        
+        do {
+            try sharedRealm.write {
+                project.frame = NSCoder.string(for: videoView.frame)
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+        
+        perform(#selector(updateContentTransform), with: nil, afterDelay: 0.1)
+    }
+    
+    @objc fileprivate func updateContentTransform() {
+        let project = ProjectManager.current
+        let media = project.medias[selectedMediaIndex]
+        let contentType = ContentType(rawValue: project.contentType)!
+        let imageSize = thumbImageView.image!.size
+        if contentType == .scaleFill {
+            var imageScale = CGFloat(fminf(Float(imageSize.width / videoView.frame.width), Float(imageSize.height / videoView.frame.height)))
+            let scaledImageSize = CGSize(width: imageSize.width / imageScale, height: imageSize.height / imageScale)
+            imageScale = fmax(scaledImageSize.width / videoView.frame.width, scaledImageSize.height / videoView.frame.height)
+            do {
+                try sharedRealm.write {
+                    media.contentTransform = NSCoder.string(for: CGAffineTransform.identity.scaledBy(x: imageScale, y: imageScale))
+                    thumbImageView.transform = NSCoder.cgAffineTransform(for: media.transform).concatenating(NSCoder.cgAffineTransform(for: media.contentTransform))
+                }
+            } catch {
+                
+            }
+        } else {
+            var imageScale = CGFloat(fmaxf(Float(imageSize.width / videoView.frame.width), Float(imageSize.height / videoView.frame.height)))
+            let scaledImageSize = CGSize(width: imageSize.width / imageScale, height: imageSize.height / imageScale)
+            imageScale = fmax(scaledImageSize.width / videoView.frame.width, scaledImageSize.height / videoView.frame.height)
+            do {
+                try sharedRealm.write {
+                    media.contentTransform = NSCoder.string(for: CGAffineTransform.identity.scaledBy(x: imageScale, y: imageScale))
+                    thumbImageView.transform = NSCoder.cgAffineTransform(for: media.transform).concatenating(NSCoder.cgAffineTransform(for: media.contentTransform))
+                }
+            } catch {
+                
+            }
+        }
+    }
+    
+    fileprivate func updateAssets(_ media: Media) {
+        for imageView in arrayImageViews {
+            imageView.removeFromSuperview()
+        }
+        activeImageView = nil
+        arrayImageViews.removeAll()
+        
+        let resourceURL = Bundle.main.bundleURL.appendingPathComponent("Stickers")
+        for image in media.images {
+            let path = resourceURL.appendingPathComponent(image.category).appendingPathComponent(image.filename).path
+            let uiimage = UIImage(contentsOfFile: path)!
+            addImageView(uiimage)
+            activeImageView?.uuid = image.id
+            activeImageView?.bounds = NSCoder.cgRect(for: image.bounds)
+            activeImageView?.transform = NSCoder.cgAffineTransform(for: image.transform)
+            activeImageView?.center = NSCoder.cgPoint(for: image.center)
+            activeImageView?.isActive = false
+            activeImageView = nil
+        }
+        
+        for textView in arrayTextViews {
+            textView.removeFromSuperview()
+        }
+        activeTextView = nil
+        arrayTextViews.removeAll()
+        
+        for text in media.texts {
+            addTextView(text.text, false)
+            let _ = self.textView(activeTextView!, shouldChangeText: text.text)
+            activeTextView?.bounds = NSCoder.cgRect(for: text.bounds)
+            activeTextView?.transform = NSCoder.cgAffineTransform(for: text.transform)
+            activeTextView?.center = NSCoder.cgPoint(for: text.center)
+            activeTextView?.fontIndex = text.fontIndex
+            activeTextView?.setTextFontWithName(TextsView.arrayFonts[text.fontIndex])
+            activeTextView?.fontSize = CGFloat(text.fontSize)
+            activeTextView?.colorIndex = text.colorIndex
+            activeTextView?.textColor = UIColor(hexInt: APP_ARRAY_COLORS[text.colorIndex])
+            activeTextView?.textOpacity = CGFloat(text.opacity)
+            activeTextView?.isActive = false
+            activeTextView?.uuid = text.id
+            activeTextView = nil
+        }
+        
+        timeLabel.isHidden = false
+        assetButtonView.isHidden = false
+    }
+    
+    fileprivate func frame(for ratio: CGFloat, parentView: UIView) -> CGRect {
+        let imageSize = CGSize(width: 1.0, height: 1.0 / ratio)
+        let viewWidth = parentView.frame.width
+        let viewHeight = parentView.frame.height
+        
+        let imageScale = CGFloat(fmaxf(Float(imageSize.width / viewWidth), Float(imageSize.height / viewHeight)))
+        let scaledImageSize = CGSize(width: imageSize.width / imageScale, height: imageSize.height / imageScale)
+        let frame = CGRect(x: 0.5 * (viewWidth - scaledImageSize.width),
+                           y: 0.5 * (viewHeight - scaledImageSize.height),
+                           width: scaledImageSize.width,
+                           height: scaledImageSize.height);
+        
+        return frame
+    }
+    
+    fileprivate func frame(contained ratio: CGFloat, parentView: UIView) -> CGRect {
+        let imageSize = CGSize(width: 1.0, height: 1.0 / ratio)
+        let viewWidth = parentView.frame.width
+        let viewHeight = parentView.frame.height
+        
+        let imageScale = CGFloat(fminf(Float(imageSize.width / viewWidth), Float(imageSize.height / viewHeight)))
+        let scaledImageSize = CGSize(width: imageSize.width / imageScale, height: imageSize.height / imageScale)
+        let frame = CGRect(x: 0.5 * (viewWidth - scaledImageSize.width),
+                           y: 0.5 * (viewHeight - scaledImageSize.height),
+                           width: scaledImageSize.width,
+                           height: scaledImageSize.height);
+        
+        return frame
+    }
+    
+    fileprivate func showBottomMenu(_ show: Bool) {
+        UIView.animate(withDuration: 0.3) {
+            if show {
+                self.bottomMenuConstraint.constant = 0
+            } else {
+                self.bottomMenuConstraint.constant = -self.sheetMenuView.frame.height
+            }
+            self.view.layoutIfNeeded()
+        } completion: { (finished) in
+            
+        }
+    }
+    
+    fileprivate func showOrderMenu(_ show: Bool) {
+        if show {
+            orderMenuView.removeFromSuperview()
+            let contentView = orderMenuView!
+            contentView.frame = CGRect(x: 24, y: 0, width: view.frame.width - 48, height: contentView.frame.height)
+            popupView = FFPopup(contentView: contentView, showType: .slideInFromBottom, dismissType: .slideOutToBottom, maskType: .dimmed, dismissOnBackgroundTouch: true, dismissOnContentTouch: false)
+            let layout = FFPopupLayout(horizontal: .center, vertical: .bottom, offset: 10 + view.safeAreaInsets.bottom)
+            //popupView.shouldShowClose = true
+            popupView.show(layout: layout)
+            self.shareButton.isHidden = true
+            popupView.didFinishShowingBlock = {
+                self.shareButton.isHidden = true
+            }
+            popupView.didFinishDismissingBlock = {
+                self.shareButton.isHidden = false
+            }
+            popupView.closeButton.frame = CGRect(x: self.view.frame.width - 68, y: self.view.safeAreaInsets.top, width: 64.0, height: 64.0)
+            popupView.closeButton.setImage(UIImage(named: "IconClose"), for: .normal)
+        } else {
+            popupView.dismiss(animated: true)
+            shareButton.isHidden = false
+        }
+    }
+    
+    fileprivate func updateSeekSlider() {
+        seekSlider.maximumValue = Float(ProjectManager.current.duration())
+        let range = ProjectManager.current.mediaTime(selectedMediaIndex)
+        if seekSlider.value < Float(range.0) || seekSlider.value > Float(range.1) {
+            seekSlider.value = Float(range.0)
+        }
+    }
+    
+    fileprivate func updateOrderView() {
+        let orderType = OrderType(rawValue: ProjectManager.current.orderType)!
+        switch orderType {
+        case .custom:
+            topOrderCheckConstraint.constant = 10
+        case .shuffle:
+            topOrderCheckConstraint.constant = 10 + orderCustomButton.superview!.frame.height
+        case .date:
+            topOrderCheckConstraint.constant = 10 + orderCustomButton.superview!.frame.height + orderShuffleButton.superview!.frame.height
+        }
+        
+        mediasView.updateOrderView()
+    }
+    
+    @objc fileprivate func handlePauseTrimVideo() {
+        trimPlayerView.pause()
+        trimPlayView.isHidden = false
+    }
+    
+    @objc fileprivate func handlePreviewPlaying(_ notification: Notification) {
+        playButton.isSelected = true
+    }
+    
+    @objc fileprivate func handlePreviewStopped(_ notification: Notification) {
+        self.previewController = nil
+        self.previewPlayerView.alpha = 0.0
+        
+        playButton.isSelected = false
+        self.loadProject()
+    }
+    /*
+    // MARK: - Navigation
+
+    // In a storyboard-based application, you will often want to do a little preparation before navigation
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        // Get the new view controller using segue.destination.
+        // Pass the selected object to the new view controller.
+    }
+    */
+    
+    // MARK: - UITapGestureRecognizer
+    @objc fileprivate func deactivateViews(tapGesture: UITapGestureRecognizer) {
+        for textView in arrayTextViews {
+            textView.isActive = false
+        }
+        
+        for imageView in arrayImageViews {
+            imageView.isActive = false
+        }
+        
+        timeLabel.isHidden = false
+        
+        if textsView.superview != nil, textsView.isHidden == false {
+            didSelectDone(textsView)
+        }
+        
+        textDoneButton.isHidden = true
+        shareButton.isHidden = false
+    }
+    
+    @IBAction fileprivate func handlePanGesture(panGesture: UIPanGestureRecognizer) {
+        let translation = panGesture.translation(in: videoView)
+        let project = ProjectManager.current
+        let media = project.medias[selectedMediaIndex]
+        let moveTransform = CGAffineTransform.identity.translatedBy(x: translation.x, y: translation.y)
+        let transform = NSCoder.cgAffineTransform(for: media.transform).concatenating(moveTransform)
+        thumbImageView.transform = transform.concatenating(NSCoder.cgAffineTransform(for: media.contentTransform))
+        panGesture.setTranslation(.zero, in: videoView)
+        do {
+            try sharedRealm.write {
+                media.transform = NSCoder.string(for: transform)
+                media.centerX += Float(translation.x)
+                media.centerY += Float(translation.y)
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+    
+    @IBAction fileprivate func handlePinchGesture(pinchGesture: UIPinchGestureRecognizer) {
+        let scale = pinchGesture.scale
+        let project = ProjectManager.current
+        let media = project.medias[selectedMediaIndex]
+        let scaleTransform = CGAffineTransform.identity.scaledBy(x: scale, y: scale)
+        let transform = NSCoder.cgAffineTransform(for: media.transform).concatenating(scaleTransform)
+        thumbImageView.transform = transform.concatenating(NSCoder.cgAffineTransform(for: media.contentTransform))
+        pinchGesture.scale = 1.0
+        do {
+            try sharedRealm.write {
+                media.transform = NSCoder.string(for: transform)
+                media.scale *= Float(scale)
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+
+    // MARK: - IBAction
+    @IBAction func backButtonPressed(_ sender: UIButton) {
+        if editButton.isHidden == true {
+            editButton.isHidden = false
+            editBoardView.isHidden = true
+            lastBottomView?.isHidden = false
+            controlsView.isHidden = false
+            tabView.isHidden = false
+            trimPlayView.isHidden = true
+            shareButton.isHidden = false
+            trimPlayerView.removeFromSuperview()
+            showBoardView(selectedTabItem)
+            return
+        }
+        
+        if textDoneButton.isHidden == false {
+            textDoneButton.isHidden = true
+            shareButton.isHidden = false
+            if let view = activeTextView {
+                let project = ProjectManager.current
+                let media = project.medias[selectedMediaIndex]
+                let text = media.texts.first { text in
+                    return text.id == view.uuid
+                }
+                
+                if text == nil {
+                    view.removeFromSuperview()
+                    activeTextView = nil
+                    textsView.isHidden = true
+                } else {
+                    didSelectDone(textsView)
+                }
+            }
+            return
+        }
+        
+        let vc = UIAlertController(title: "", message: "Are you sure you want to go back to the main menu?", preferredStyle: .alert)
+        vc.addAction(UIAlertAction(title: "OK", style: .default, handler: { action in
+            self.navigationController?.popToRootViewController(animated: true)
+        }))
+        vc.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: { action in
+            
+        }))
+        present(vc, animated: true, completion: nil)
+    }
+    
+    @IBAction func timelineButtonPressed(_ sender: UIButton) {
+        showBottomMenu(true)
+    }
+    
+    @IBAction func editDoneButtonPressed(_ sender: UIButton) {
+        editDoneButton.isHidden = true
+        shareButton.isHidden = false
+        editBoardView.hideAllSubviews()
+        editBoardView.doneSubview()
+        if audioRecordView.isHidden == false {
+            audioRecordView.isHidden = true
+            musicBottomView.isHidden = false
+            if let url = audioRecordView.recordURL {
+                let project = ProjectManager.current
+                //let asset = AVURLAsset(url: url)
+                do {
+                    try sharedRealm.write {
+                        let music = Music()
+                        music.projectId = project.id
+                        music.name = "Rec \(recordIndex)"
+                        recordIndex += 1
+                        if url.absoluteString.contains("ipod-library://") {
+                            music.itunespath = url.absoluteString
+                            music.filename = ""
+                        } else {
+                            music.itunespath = ""
+                            music.filename = url.lastPathComponent
+                        }
+                        music.start = 0
+                        music.end = Float(project.duration())
+                        project.musics.append(music)
+                        self.musicBottomView.reloadData()
+                    }
+                } catch {
+                    print(error.localizedDescription)
+                }
+            }
+        }
+    }
+    
+    @IBAction func shareButtonPressed(_ sender: UIButton) {
+        performSegue(withIdentifier: "ShareViewController", sender: nil)
+        //ProjectManager.shared.share(project: ProjectManager.current, from: self, sourceView: sender)
+    }
+    
+    @IBAction func textDoneButtonPressed(_ sender: UIButton) {
+        if textsView.superview != nil, textsView.isHidden == false {
+            didSelectDone(textsView)
+        }
+    }
+    
+    @IBAction func editButtonPressed(_ sender: UIButton) {
+        /*let assetView = AssetView.loadFromNib()
+        assetView.frame = CGRect(x: 0, y: self.view.frame.height - assetView.frame.height, width: self.view.frame.width, height: assetView.frame.height)
+        assetView.delegate = self
+        self.view.addSubview(assetView)
+        
+        assetButtonView.isHidden = true*/
+        
+        hideAllSubviews()
+        self.view.addSubview(editBoardView)
+        editBoardView.selectedMediaIndex = selectedMediaIndex
+        editButton.isHidden = true
+        editBoardView.isHidden = false
+        shareButton.isHidden = true
+        controlsView.isHidden = true
+        tabView.isHidden = true
+    }
+    
+    @IBAction func deleteButtonPressed(_ sender: UIButton) {
+        
+    }
+    
+    @IBAction func playButtonPressed() {
+        if self.playButton.isSelected {
+            if self.previewController != nil {
+                self.previewController.stop()
+                self.playButton.isSelected = false
+            }
+            
+        } else {
+//            let project = ProjectManager.current.project
+//            let settings = SSProjectSettings()
+//            project.settings = settings
+//            previewController = nil
+//            previewController = SSPlayerController(player: previewPlayerView, andProject: project)
+//            previewPlayerView.isHidden = false
+//            previewPlayerView.alpha = 1.0
+            if self.previewController != nil {
+                previewPlayerView.isHidden = false
+                previewPlayerView.alpha = 1.0
+                self.previewController.play()
+                self.playButton.isSelected = true
+            }
+            
+//            NotificationCenter.default.addObserver(self, selector: #selector(observeToPlay(notification:)), name: NSNotification.Name.SSPlayerControllerPlaying, object: nil)
+//            NotificationCenter.default.addObserver(self, selector: #selector(observeToStop(notification:)), name: NSNotification.Name.SSPlayerControllerStopped, object: nil)
+        }
+    }
+    var mediaViews: [UIView] = []
+    var mediaVideos: [AVPlayer] = []
+    public func playButtonPressed1(_ project: SSProject) {
+        let settings = SSProjectSettings()
+        project.settings = settings
+        self.previewController = nil
+        self.previewController = SSPlayerController(player: self.previewPlayerView, andProject: project)
+        self.previewController.editViewCtrl = self
+//        self.previewPlayerView.isHidden = false
+//        self.previewPlayerView.alpha = 1.0
+//        self.previewController.play()
+//        self.playButton.isSelected = true
+        var index = project.imageItems.count
+        index = index - 1
+        while index > -1 {
+            let media = project.imageItems[index]
+            let container = UIView.init(frame: self.viewPlayerView.bounds)
+            if media.isVideo {
+                let pplayer = AVPlayer(url: media.videoUrl)
+                let playerLayer = AVPlayerLayer(player: pplayer)
+                playerLayer.frame = container.bounds
+                playerLayer.videoGravity = .resizeAspectFill
+                container.layer.addSublayer(playerLayer)
+                container.tag = 10
+                
+                mediaVideos.append(pplayer)
+            } else {
+                let imageView = UIImageView.init(frame: self.viewPlayerView.bounds)
+                imageView.contentMode = .scaleAspectFill
+                imageView.image = media.rawImage
+                container.addSubview(imageView)
+                
+                mediaVideos.append(AVPlayer())
+            }
+            container.backgroundColor = UIColor.black
+            self.viewPlayerView.addSubview(container)
+//            container.alpha = 0
+            mediaViews.append(container)
+            
+            index = index - 1
+        }
+//        mediaViews[0].alpha = 1
+    }
+//    @objc func observeToPlay(notification: NSNotification) {
+//        playButton.isSelected = true
+//    }
+//    @objc func observeToStop(notification: NSNotification) {
+//        playButton.isSelected = false
+//        self.previewController = nil
+//
+//        self.loadProject()
+//    }
+    
+    @IBAction func seekSliderChanged(_ sender: UISlider) {
+        //previewController.jump(TimeInterval(sender.value))
+    }
+    
+    @IBAction func seekSliderChangedUp(_ sender: UISlider) {
+//        previewController.jump(TimeInterval(sender.value))
+    }
+    
+    @IBAction func tabButtonPressed(_ sender: UIButton) {
+        let tabItem = TabItem(rawValue: sender.superview!.tag)!
+        if tabItem == .music {
+            /*if PurchaseManager.sharedManager.isPurchased(productId: UNLOCK_MUSIC) == false {
+                if UserDefaults.standard.bool(forKey: kAppiraterRatedCurrentVersion) == false {
+                    let controller = UIAlertController(title: "Rating Us", message: "If you are enjoying the app, would you mind leaving some feedback?", preferredStyle: .alert)
+                    controller.addAction(UIAlertAction(title: "Sure", style: .cancel, handler: { action in
+                        Appirater.setAppId("1046183199")
+                        Appirater.rateApp()
+                    }))
+                    controller.addAction(UIAlertAction(title: "Not Now", style: .default, handler: { (action) in
+                        //PurchaseView.show().parentViewController = self
+                    }))
+                    self.present(controller, animated: true, completion: nil)
+                    return
+                }
+            }*/
+        }
+        
+        selectedTabItem = tabItem
+        selectTabItem(tabItem)
+        showBoardView(tabItem)
+    }
+    
+    @IBAction func handleBlurViewTapGesture(_ sender: UITapGestureRecognizer) {
+        showBottomMenu(false)
+        showOrderMenu(false)
+    }
+    
+    @IBAction func undoButtonPressed(_ sender: UIButton) {
+        
+    }
+    
+    @IBAction func redoButtonPressed(_ sender: UIButton) {
+        
+    }
+        
+    @IBAction func revertButtonPressed(_ sender: UIButton) {
+        
+    }
+    
+    @IBAction func previewEndButtonPressed(_ sender: UIButton) {
+        previewEndButton.isHidden = true
+        
+        seekSlider.value = prevSeekValue
+        
+        selectedMediaIndex = lastSelectedIndex
+        didSelectMedia(selectedMediaIndex)
+        mediasView.selectedIndex = selectedMediaIndex
+        updateTimeLabel()
+        updateAssets(ProjectManager.current.medias[selectedMediaIndex])
+    }
+    
+    @IBAction func didSelectText(_ sender: UIButton?) {
+        addTextView("", true)
+        let height: CGFloat = UIDevice.current.userInterfaceIdiom == .phone ? 360 : 558
+        let frame = CGRect(x: 0, y: self.view.frame.height - height, width: self.view.frame.width, height: height)
+        textsView.frame = frame
+        textsView.textView = activeTextView!
+        self.view.addSubview(textsView)
+    }
+    
+    @IBAction func orderCustomPressed(_ sender: UIButton) {
+        do {
+            try sharedRealm.write {
+                ProjectManager.current.orderType = OrderType.custom.rawValue
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+        updateOrderView()
+    }
+    
+    @IBAction func orderShufflePressed(_ sender: UIButton) {
+        do {
+            try sharedRealm.write{
+                ProjectManager.current.orderType = OrderType.shuffle.rawValue
+                let medias = List<Media>()
+                let shuffled = ProjectManager.current.medias.shuffled()
+                for media in shuffled {
+                    medias.append(media)
+                }
+                ProjectManager.current.medias = medias
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+        mediasView.reloadData()
+        updateOrderView()
+    }
+    
+    @IBAction func orderDatePressed(_ sender: UIButton) {
+        do {
+            try sharedRealm.write {
+                ProjectManager.current.orderType = OrderType.date.rawValue
+                let medias = List<Media>()
+                let sorted = ProjectManager.current.medias.sorted(by: { media1, media2 in
+                    return media1.creationDate < media2.creationDate
+                })
+                for media in sorted {
+                    medias.append(media)
+                }
+                ProjectManager.current.medias = medias
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+        mediasView.reloadData()
+        updateOrderView()
+    }
+    
+    @IBAction func orderClosePressed(_ sender: UIButton) {
+        popupView.dismiss(animated: true)
+        shareButton.isHidden = false
+    }
+    
+    @IBAction func trimPlayPressed(_ sender: UIButton) {
+        if trimPlayerView.isPlaying {
+            trimPlayButton.isSelected = false
+            trimPlayView.isHidden = false
+            trimPlayerView.pause()
+        } else {
+            trimPlayButton.isSelected = true
+            trimPlayView.isHidden = true
+            trimPlayerView.play()
+        }
+    }
+}
+
+// MARK: - ArrangeViewDelegate
+extension EditViewController: ArrangeViewDelegate {
+    func didChangeColor(_ index: Int) {
+        do {
+            try sharedRealm.write {
+                ProjectManager.current.colorIndex = index
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+        
+        if index >= 0 {
+            blurImageView.isHidden = true
+            videoView.backgroundColor = UIColor(hexInt: APP_ARRAY_COLORS[index])
+        } else {
+            blurImageView.isHidden = false
+        }
+    }
+    
+    func didChangeContentType(_ type: ContentType) {
+        do {
+            try sharedRealm.write {
+                ProjectManager.current.contentType = type.rawValue
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+        
+        let project = ProjectManager.current
+        let media = project.medias[selectedMediaIndex]
+        let imageSize = thumbImageView.image!.size
+        if type == .scaleFill {
+            var imageScale = CGFloat(fminf(Float(imageSize.width / videoView.frame.width), Float(imageSize.height / videoView.frame.height)))
+            let scaledImageSize = CGSize(width: imageSize.width / imageScale, height: imageSize.height / imageScale)
+            imageScale = fmax(scaledImageSize.width / videoView.frame.width, scaledImageSize.height / videoView.frame.height)
+            do {
+                try sharedRealm.write {
+                    media.contentTransform = NSCoder.string(for: CGAffineTransform.identity.scaledBy(x: imageScale, y: imageScale))
+                    thumbImageView.transform = NSCoder.cgAffineTransform(for: media.transform).concatenating(NSCoder.cgAffineTransform(for: media.contentTransform))
+                }
+            } catch {
+                
+            }
+        } else {
+            var imageScale = CGFloat(fmaxf(Float(imageSize.width / videoView.frame.width), Float(imageSize.height / videoView.frame.height)))
+            let scaledImageSize = CGSize(width: imageSize.width / imageScale, height: imageSize.height / imageScale)
+            imageScale = fmax(scaledImageSize.width / videoView.frame.width, scaledImageSize.height / videoView.frame.height)
+            do {
+                try sharedRealm.write {
+                    media.contentTransform = NSCoder.string(for: CGAffineTransform.identity.scaledBy(x: imageScale, y: imageScale))
+                    thumbImageView.transform = NSCoder.cgAffineTransform(for: media.transform).concatenating(NSCoder.cgAffineTransform(for: media.contentTransform))
+                }
+            } catch {
+                
+            }
+        }
+    }
+    
+    func didTapRatio() {
+        arrangeView.isHidden = true
+        tabView.isHidden = true
+        let ratiosView = RatiosView.loadFromNib()
+        ratiosView.delegate = self
+        self.view.addSubview(ratiosView)
+        let height = self.view.frame.height - controlsView.frame.maxY + controlsView.frame.height - playsView.frame.maxY
+        ratiosView.frame = CGRect(x: 0, y: self.view.frame.height - height, width: self.view.frame.width, height: height)
+    }
+}
+
+// MARK: - RatiosViewDelegate
+extension EditViewController: RatiosViewDelegate {
+    func didSelectRatio(_ ratio: RatioType?) {
+        arrangeView.isHidden = false
+        tabView.isHidden = false
+        if let ratio = ratio {
+            do {
+                try sharedRealm.write {
+                    ProjectManager.current.ratio = ratio.rawValue
+                    arrangeView.project = ProjectManager.current
+                }
+                updateVideoView()
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+    }
+}
+
+// MARK: - EditViewDelegate
+extension EditViewController: EditViewDelegate {
+    func didTapNew(_ view: EditView, _ index: Int) {
+        insertMediaIndex = index
+        let controller = UIImagePickerController()
+        controller.mediaTypes = [kUTTypeMovie as String, kUTTypeImage as String]
+        controller.sourceType = .photoLibrary
+        controller.delegate = self
+        present(controller, animated: true, completion: nil)
+    }
+    
+    func didSelectMedia(_ index: Int) {
+        if selectedMediaIndex == index {
+            return
+        }
+        
+        selectedMediaIndex = index
+        effectView.media = ProjectManager.current.medias[selectedMediaIndex]
+        
+        let project = ProjectManager.current
+        let media = project.medias[index]
+        updateVideoView()
+        updateAssets(media)
+        updateSeekSlider()
+    }
+    
+    func didTrashMedia(_ index: Int) {
+        let project = ProjectManager.current
+        do {
+            try sharedRealm.write {
+                project.medias[index].deleteFile()
+                project.medias.remove(at: index)
+            }
+            if selectedMediaIndex >= index {
+                selectedMediaIndex -= 1
+                if selectedMediaIndex < 0 {
+                    selectedMediaIndex = 0
+                }
+                if selectedMediaIndex >= project.medias.count {
+                    selectedMediaIndex = project.medias.count - 1
+                }
+                mediasView.selectedIndex = selectedMediaIndex
+                let media = project.medias[selectedMediaIndex]
+                updateVideoView()
+                updateAssets(media)
+            }
+            mediasView.project = project
+            updateSeekSlider()
+            updateTimeLabel()
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+    
+    func didTapOrder(_ view: EditView) {
+        showOrderMenu(true)
+    }
+    
+    func didStartDrag(_ view: EditView) {
+        tabView.isHidden = true
+    }
+    
+    func didEndDrag(_ view: EditView) {
+        tabView.isHidden = false
+    }
+}
+
+// MARK: - TimeViewDelegate
+extension EditViewController: TimeViewDelegate {
+    func didChangeImageDuration(_ time: CGFloat) {
+        do {
+            try sharedRealm.write {
+                ProjectManager.current.imageDuration = Float(time)
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+        seekSlider.minimumValue = 0
+        updateSeekSlider()
+        updateTimeLabel()
+    }
+}
+
+// MARK: - UIImagePickerControllerDelegate
+extension EditViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        picker.dismiss(animated: true, completion: nil)
+        
+        if let asset = info[UIImagePickerController.InfoKey.phAsset] as? PHAsset {
+            if var image = info[UIImagePickerController.InfoKey.originalImage] as? UIImage {
+                image = image.fixedOrientation()
+                let project = ProjectManager.current
+                let duration = project.duration(nil) + CGFloat(project.imageDuration)
+                if duration > DEFAULT_EXPORT_DURATION, PurchaseManager.sharedManager.isPurchased() == false {
+                    PurchaseView.show().parentViewController = self
+                    return
+                }
+                
+                do {
+                    let filename = Utilities.generateRandomFileName(fileExtension: "png")
+                    var path = Utilities.generateFilePath(filename: filename, projectId: project.id)
+                    try? image.pngData()!.write(to: URL(fileURLWithPath: path))
+                    let blur = image.blurImage()
+                    let blurname = Utilities.generateRandomFileName(fileExtension: "png")
+                    path = Utilities.generateFilePath(filename: blurname, projectId: project.id)
+                    try? blur.pngData()!.write(to: URL(fileURLWithPath: path))
+                    try sharedRealm.write {
+                        let media = Media()
+                        media.filename = filename
+                        media.blurname = blurname
+                        media.localIdentifier = asset.localIdentifier
+                        media.projectId = project.id
+                        media.type = MediaType.image.rawValue
+                        media.effectType = EffectType.none.rawValue
+                        project.medias.insert(media, at: insertMediaIndex)
+                        mediasView.project = project
+                    }
+                    updateSeekSlider()
+                    updateTimeLabel()
+                    
+                    self.loadProject()
+                } catch {
+                    print(error.localizedDescription)
+                }
+            } else if let videoURL = info[UIImagePickerController.InfoKey.mediaURL] as? URL {
+                
+                self.getAllFrames(videoURL)
+                
+                let project = ProjectManager.current
+                let duration = project.duration(nil) + CGFloat(project.imageDuration)
+                if duration > DEFAULT_EXPORT_DURATION, PurchaseManager.sharedManager.isPurchased() == false {
+                    //PurchaseView.show().parentViewController = self
+                    return
+                }
+                let filename = Utilities.generateRandomFileName(fileExtension: "mov")
+                let path = Utilities.generateFilePath(filename: filename, projectId: project.id)
+                SVProgressHUD.show()
+                VideoService.saveVideo(AVURLAsset(url: videoURL), path: path) { success, error in
+                    let blurname = Utilities.generateRandomFileName(fileExtension: "mov")
+                    let blurpath = Utilities.generateFilePath(filename: blurname, projectId: project.id)
+                    let videoAsset = AVURLAsset(url: URL(fileURLWithPath: path))
+                    VideoService.shared().blurVideo(videoAsset, path: blurpath) { success in
+                        SVProgressHUD.dismiss()
+                        do {
+                            try sharedRealm.write {
+                                let media = Media()
+                                media.filename = filename
+                                media.blurname = blurname
+                                media.localIdentifier = asset.localIdentifier
+                                media.projectId = project.id
+                                media.type = MediaType.video.rawValue
+                                media.effectType = EffectType.none.rawValue
+                                project.medias.insert(media, at: self.insertMediaIndex)
+                                self.mediasView.project = project
+                            }
+                            self.updateSeekSlider()
+                            self.updateTimeLabel()
+                            
+                            self.loadProject()
+                        } catch {
+                            print(error.localizedDescription)
+                        }
+                    }
+                }
+            }
+        }
+        //let mediaType = info[UIImagePickerController.InfoKey.mediaType]
+    }
+    
+    
+
+    func getAllFrames(_ videoUrl: URL) {
+       let asset:AVAsset = AVAsset(url:videoUrl)
+       let duration:Float64 = CMTimeGetSeconds(asset.duration)
+       self.generator = AVAssetImageGenerator(asset:asset)
+       self.generator!.appliesPreferredTrackTransform = true
+       self.frames = []
+       for index:Int in 0 ..< 120 {
+           self.getFrame(fromTime:Float64( duration / 120.0 * (Float64(index))))
+       }
+       self.generator = nil
+    }
+
+    private func getFrame(fromTime:Float64) {
+        let time:CMTime = CMTimeMakeWithSeconds(fromTime, preferredTimescale:20)
+        let image:CGImage
+        do {
+            try image = self.generator!.copyCGImage(at:time, actualTime:nil)
+        } catch {
+           return
+        }
+        self.frames.append(UIImage(cgImage:image))
+    }
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true, completion: nil)
+    }
+}
+
+// MARK: - ArtsViewDelegate
+extension EditViewController: ArtsViewDelegate {
+    func didSelectArt(_ category: String, _ filename: String, _ artImage: UIImage) {
+        if !PurchaseManager.sharedManager.isPurchased() {
+            //PurchaseView.show().parentViewController = self
+            return;
+        }
+        
+        if let imageView = activeImageView, imageView.isActive {
+            imageView.setImage(artImage)
+        } else {
+            addImageView(artImage)
+        }
+        
+        let project = ProjectManager.current
+        let media = project.medias[selectedMediaIndex]
+        do {
+            try sharedRealm.write {
+                let image = Image()
+                image.category = category
+                image.filename = filename
+                image.bounds = NSCoder.string(for: activeImageView!.bounds)
+                image.transform = NSCoder.string(for: activeImageView!.transform)
+                image.center = NSCoder.string(for: activeImageView!.center)
+                image.zIndex = Int(activeImageView!.layer.zPosition)
+                image.order = media.images.count + media.texts.count
+                media.images.append(image)
+                activeImageView?.uuid = image.id
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+    
+    func didSelectClose(_ view: ArtsView) {
+        assetButtonView.isHidden = false
+        controlsView.isHidden = false
+    }
+    
+    func addImageView(_ image: UIImage) {
+        let imageView = TVImageView()
+        imageView.delegate = self
+        let videoFrame = videoView.frame
+        var frameSize = TVImageView.frameSize(with: image, maxSize: videoFrame.size)
+        frameSize.width /= 2.0
+        frameSize.height /= 2.0
+        imageView.frame = CGRect(x: 0.5 * (videoFrame.size.width - frameSize.width), y: 0.5 * (videoFrame.size.height - frameSize.height), width: frameSize.width, height: frameSize.height)
+        activeImageView = imageView
+        imageView.setImage(image)
+        imageView.setOriginImage(image)
+        imageView.isActive = true
+        
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(moveView(gesture:)))
+        pan.minimumNumberOfTouches = 1
+        pan.maximumNumberOfTouches = 2
+        imageView.addGestureRecognizer(pan)
+        
+        videoView.addSubview(imageView)
+        arrayImageViews.append(imageView)
+    }
+    
+    @objc func moveView(gesture: UIPanGestureRecognizer) {
+        if (gesture.view == activeTextView && activeTextView?.isActive == true) ||
+            (gesture.view == activeImageView && activeImageView?.isActive == true)
+        {
+            let translatedPoint = gesture.location(in: self.view)
+            
+            if gesture.state == .began {
+                previousPoint = translatedPoint
+            }
+            
+            let dX = translatedPoint.x - previousPoint.x
+            let dY = translatedPoint.y - previousPoint.y
+            
+            previousPoint = translatedPoint;
+            
+            var viewCenter = gesture.view!.center
+            viewCenter.x += dX
+            viewCenter.y += dY
+            
+            gesture.view!.center = viewCenter
+            
+            if gesture.state != .began, gesture.state != .changed {
+                let project = ProjectManager.current
+                let media = project.medias[selectedMediaIndex]
+                if let textView = gesture.view as? TVTextView, let text = media.texts.first(where: { text in
+                    return textView.uuid == text.id
+                }) {
+                    do {
+                        try sharedRealm.write {
+                            text.bounds = NSCoder.string(for: textView.bounds)
+                            text.center = NSCoder.string(for: textView.center)
+                        }
+                    } catch {
+                        
+                    }
+                } else if let imageView = gesture.view as? TVImageView, let image = media.images.first(where: { image in
+                    return imageView.uuid == image.id
+                }) {
+                    do {
+                        try sharedRealm.write {
+                            image.bounds = NSCoder.string(for: imageView.bounds)
+                            image.center = NSCoder.string(for: imageView.center)
+                        }
+                    } catch {
+                        
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - AssetViewDelegate
+extension EditViewController: AssetViewDelegate {
+    func didSelectArt(_ view: AssetView) {
+        
+    }
+    
+    func didSelectText(_ view: AssetView) {
+        //assetButtonView.isHidden = false
+        //controlsView.isHidden = false
+        addTextView("", true)
+        let height: CGFloat = UIDevice.current.userInterfaceIdiom == .phone ? 360 : 558
+        let frame = CGRect(x: 0, y: self.view.frame.height - height, width: self.view.frame.width, height: height)
+        textsView.frame = frame
+        textsView.textView = activeTextView!
+        self.view.addSubview(textsView)
+    }
+    
+    func didSelectGif(_ view: AssetView) {
+        assetButtonView.isHidden = false
+        controlsView.isHidden = false
+    }
+    
+    func didSelectBack(_ view: AssetView) {
+        assetButtonView.isHidden = false
+        controlsView.isHidden = false
+    }
+}
+
+// MARK: - TextsViewDelegate
+extension EditViewController: TextsViewDelegate {
+    func didSelectDone(_ view: TextsView) {
+        assetButtonView.isHidden = false
+        controlsView.isHidden = false
+        timeLabel.isHidden = false
+        textDoneButton.isHidden = true
+        shareButton.isHidden = false
+        view.isHidden = true
+        
+        let textView = view.textView!
+        textView.isActive = false
+        let media = ProjectManager.current.medias[selectedMediaIndex]
+        if let uuid = textView.uuid, uuid != "", let text = media.texts.first(where: { text in
+            return text.id == uuid
+        }) {
+            do {
+                try sharedRealm.write {
+                    text.text = view.text.text
+                    text.fontIndex = textView.fontIndex
+                    text.fontSize = Float(textView.fontSize)
+                    text.colorIndex = textView.colorIndex
+                    text.bounds = NSCoder.string(for: textView.bounds)
+                    text.transform = NSCoder.string(for: textView.transform)
+                    text.center = NSCoder.string(for: textView.center)
+                    text.opacity = Float(textView.textOpacity)
+                    text.hspacing = Float(textView.hSpacing)
+                    text.vspacing = Float(textView.vSpacing)
+                    //text.rotation = textView.transform
+                }
+            } catch {
+                print(error.localizedDescription)
+            }
+        } else {
+            do {
+                try sharedRealm.write {
+                    let text = Text()
+                    text.text = view.textView.getText()
+                    text.fontIndex = textView.fontIndex
+                    text.fontSize = Float(textView.fontSize)
+                    text.colorIndex = textView.colorIndex
+                    text.bounds = NSCoder.string(for: textView.bounds)
+                    text.transform = NSCoder.string(for: textView.transform)
+                    text.center = NSCoder.string(for: textView.center)
+                    text.opacity = Float(textView.textOpacity)
+                    text.hspacing = Float(textView.hSpacing)
+                    text.vspacing = Float(textView.vSpacing)
+                    //text.rotation = textView.transform
+                    media.texts.append(text)
+                    textView.uuid = text.id
+                }
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+    }
+
+    func didSelectKeyboard(_ view: TextsView) {
+        
+    }
+
+    func didSelectFont(_ view: TextsView) {
+        
+    }
+
+    func didSelectColor(_ view: TextsView) {
+        
+    }
+
+    func didSelectFont(_ view: TextsView, _ fontName: String) {
+        
+    }
+
+    func didSelectColor(_ view: TextsView, _ color: UIColor, _ index: Int) {
+        
+    }
+
+    func didSelectOption(_ view: TextsView) {
+        
+    }
+
+    func didSelectOption(_ view: TextsView, _ option: TextOption, _ value: CGFloat) {
+        
+    }
+    
+    func addTextView(_ text: String, _ showKeyboard: Bool) {
+        for textView in arrayTextViews {
+            textView.isHidden = false
+        }
+
+        if let textView = activeTextView, textView.isActive {
+            return
+        }
+        
+        activeImageView?.isActive = false
+        activeTextView = nil
+
+        let textView = TVTextView()
+        let videoFrame = videoView.frame
+        textView.textView.text = text
+        textView.delegate = self
+        textView.frame = TEXTVIEW_FRAME;
+        textView.center = CGPoint(x: videoFrame.midX, y: videoFrame.midY)
+        if textView.frame.origin.y + textView.frame.size.height + textView.frame.origin.y > UIScreen.main.bounds.size.height - 216 {
+            var center = textView.center
+            center.y = UIScreen.main.bounds.size.height - 216 - videoFrame.origin.y - textView.frame.size.height
+            textView.center = center
+        }
+
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(moveView(gesture:)))
+        pan.minimumNumberOfTouches = 1
+        pan.maximumNumberOfTouches = 2
+        textView.addGestureRecognizer(pan)
+
+        videoView.addSubview(textView)
+
+        textView.fontIndex = 0
+        textView.isActive = true
+        textView.parentFrame = videoFrame
+        textView.textColor = .white
+        textView.colorIndex = 7
+        activeTextView = textView
+
+        arrayTextViews.append(textView)
+
+        let _ = self.textView(textView, shouldChangeText: text)
+        if showKeyboard {
+            self.perform(#selector(showKeyboard(_:)), with: textView, afterDelay: 0.1)
+        }
+    }
+    
+    @objc func showKeyboard(_ textView: TVTextView) {
+        textView.showKeyboard()
+    }
+}
+
+// MARK: - TVImageViewDelegate
+extension EditViewController: TVImageViewDelegate {
+    func graphicsViewWillBecomeActive(_ imageView: TVImageView!) -> Bool {
+        /*if artsView.isHidden == true || artsView.superview == nil {
+            return false
+        }*/
+        
+        for textView in arrayTextViews {
+            textView.isActive = false
+        }
+        
+        for iv in arrayImageViews {
+            iv.isActive = false
+        }
+        
+        activeImageView = imageView;
+        return true
+    }
+    
+    func graphicsViewRemovePressed(_ imageView: TVImageView!) {
+        UIView.animate(withDuration: 0.2) {
+            imageView.alpha = 0
+        } completion: { finished in
+            do {
+                let media = ProjectManager.current.medias[self.selectedMediaIndex]
+                try sharedRealm.write {
+                    if let index = media.images.firstIndex(where: { media in
+                        return media.id == imageView.uuid
+                    }) {
+                        media.images.remove(at: index)
+                    }
+                }
+            } catch {
+                print(error.localizedDescription)
+            }
+            imageView.removeFromSuperview()
+            if let index = self.arrayImageViews.firstIndex(of: imageView) {
+                self.arrayImageViews.remove(at: index)
+            }
+            self.activeImageView = nil
+        }
+    }
+    
+    func graphicsView(_ imageView: TVImageView!, shouldChangeFrame newFrame: CGRect) -> Bool {
+        return true
+    }
+}
+
+// MARK: - TVTextViewDelegate
+extension EditViewController: TVTextViewDelegate {
+    func textViewWillBecomeEdit(_ textView: TVTextView!) {
+        let height: CGFloat = UIDevice.current.userInterfaceIdiom == .phone ? 360 : 558
+        let frame = CGRect(x: 0, y: self.view.frame.height - height, width: self.view.frame.width, height: height)
+        textsView.frame = frame
+        textsView.textView = textView
+        let project = ProjectManager.current
+        let media = project.medias[selectedMediaIndex]
+        if let text = media.texts.first(where: { (text) -> Bool in
+            return text.id == textView.uuid
+        }) {
+            textsView.text = text
+        }
+        textsView.isHidden = false
+        self.view.addSubview(textsView)
+        
+        textDoneButton.isHidden = false
+        shareButton.isHidden = true
+    }
+    
+    func textViewWillBecomeActive(_ textView: TVTextView!) -> Bool {
+        if textsView.isHidden || textsView.superview == nil {
+            //return false
+        }
+        
+        activeImageView?.isActive = false
+        activeTextView = textView
+        
+        textView.superview?.bringSubviewToFront(textView)
+        
+        for tv in arrayTextViews {
+            if tv != textView {
+                tv.isActive = false
+            }
+        }
+        
+        for imageView in arrayImageViews {
+            imageView.isActive = false
+        }
+        
+        let media = ProjectManager.current.medias[selectedMediaIndex]
+        if let text = media.texts.first(where: { text in
+            return textView.uuid == text.id
+        }) {
+            textsView.textView = textView
+            textsView.text = text
+        }
+        
+        timeLabel.isHidden = true
+        assetButtonView.isHidden = true
+        
+        return true
+    }
+    
+    func textViewDidChange(_ textView: TVTextView!) {
+        let project = ProjectManager.current
+        let media = project.medias[selectedMediaIndex]
+        if let text = media.texts.first(where: { (text) -> Bool in
+            return text.id == textView.uuid
+        }) {
+            do {
+                try sharedRealm.write {
+                    text.fontSize = Float(textView.fontSize)
+                }
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+    }
+    
+    func textViewRemovePressed(_ textView: TVTextView!) {
+        UIView.animate(withDuration: 0.2) {
+            textView.alpha = 0.0
+        } completion: { finished in
+            do {
+                let media = ProjectManager.current.medias[self.selectedMediaIndex]
+                try sharedRealm.write {
+                    if let index = media.texts.firstIndex(where: { media in
+                        return media.id == textView.uuid
+                    }) {
+                        media.texts.remove(at: index)
+                    }
+                }
+            } catch {
+                print(error.localizedDescription)
+            }
+            textView.removeFromSuperview()
+            if let index = self.arrayTextViews.firstIndex(of: textView) {
+                self.arrayTextViews.remove(at: index)
+            }
+            self.activeTextView = nil
+        }
+    }
+    
+    func textView(_ textView: TVTextView!, shouldChangeFrame newFrame: CGRect) -> Bool {
+        return true
+    }
+    
+    func textView(_ textView: TVTextView!, shouldChangeText newText: String!) -> Bool {
+        let transform = textView.transform
+        textView.transform = .identity
+        
+        var shouldChangeText = true
+        
+        let edgeInsets = textView.textEdgesInsets()
+        let containedFrame = self.videoView.frame
+        
+        let width  = containedFrame.size.width - edgeInsets.left - edgeInsets.right
+        let height = UIScreen.main.bounds.size.height * 2.0
+        
+        var newTextSize: CGSize = .zero
+        if newText == "" {
+            newTextSize = CGSize(width: TEXTVIEW_FRAME.size.width - 2 * TEXT_OFFSET - edgeInsets.left - edgeInsets.right, height: TEXTVIEW_FRAME.size.height - 2.0 * TEXT_OFFSET - edgeInsets.top - edgeInsets.bottom)
+        } else {
+            newTextSize = (newText as NSString).boundingRect(with: CGSize(width: width, height: height), options: .usesLineFragmentOrigin, attributes: [.font: textView.textFont()!], context: nil).size
+        }
+        
+        if textView.preservedSize != .zero {
+            newTextSize = textView.preservedSize;
+        }
+        
+        newTextSize.width += edgeInsets.left + edgeInsets.right;
+        newTextSize.height += edgeInsets.top + edgeInsets.bottom;
+        
+        shouldChangeText = newTextSize.height * textView.textScale.y  < containedFrame.size.height;
+        
+        if shouldChangeText {
+            if newText == "" {
+                textView.textScale = CGPoint(x: 1.0, y: 1.0)
+            }
+            
+            textView.textSize = newTextSize
+            
+            var frame = textView.frame
+            frame.origin.x = fmin(frame.origin.x, containedFrame.size.width - (frame.size.width - TEXT_OFFSET * 2))
+            frame.origin.y = fmin(frame.origin.y, containedFrame.size.height - (frame.size.height - TEXT_OFFSET * 2))
+            
+            textView.frame = frame
+        }
+        
+        textView.transform = transform
+        
+        return shouldChangeText
+    }
+}
+
+extension EditViewController: EditBoardViewDelegate {
+    func didSelectAssetView(_ view: EditBoardView) {
+        
+    }
+    
+    func didSelectTrimView(_ view: EditBoardView) {
+        shareButton.isHidden = true
+        let project = ProjectManager.current
+        editView.addSubview(trimPlayerView)
+        trimPlayerView.frame = videoView.frame
+        let media = project.medias[selectedMediaIndex]
+        let url = URL(fileURLWithPath: media.path())
+        let asset = AVURLAsset(url: url)
+        trimPlayerView.configPlayerView(url, startTime: .zero, endTime: asset.duration)
+        editView.bringSubviewToFront(trimPlayView)
+        trimPlayView.isHidden = false
+        trimPlayerView.playerDidEndTimeHandler = { view in
+            self.trimPlayView.isHidden = false
+            self.editBoardView.showSeekTime(view.startTime)
+        }
+        trimPlayerView.playerDidPlayHandler = { view, time in
+            self.editBoardView.showSeekTime(time)
+        }
+    }
+    
+    func didChangeTrimView(_ view: EditBoardView, startTime: CMTime) {
+        trimPlayerView.startTime = startTime
+        trimPlayerView.pause()
+        trimPlayerView.seek(startTime)
+    }
+    
+    func didChangeTrimView(_ view: EditBoardView, endTime: CMTime) {
+        trimPlayerView.endTime = endTime
+        trimPlayerView.pause()
+        trimPlayerView.seek(endTime)
+    }
+    
+    func didDoneTrimView(_ view: EditBoardView, _ url: URL?, _ blururl: URL?) {
+        if let url = url, let blururl = blururl {
+            let project = ProjectManager.current
+            let media = project.medias[selectedMediaIndex]
+            media.deleteFile()
+            do {
+                try sharedRealm.write {
+                    media.filename = url.lastPathComponent
+                    media.blurname = blururl.lastPathComponent
+                    mediasView.reloadData()
+                }
+            } catch {
+                print(error.localizedDescription)
+            }
+            updateSeekSlider()
+        }
+        
+        didSelectDone(view)
+    }
+    
+    func didSelectTimeView(_ view: EditBoardView) {
+        
+    }
+    
+    func didSelectSizeView(_ view: EditBoardView) {
+        
+    }
+    
+    func didSelectVolumeView(_ view: EditBoardView) {
+        
+    }
+    
+    func didSelectSubview(_ view: EditBoardView) {
+        editDoneButton.isHidden = false
+    }
+    
+    func didSelectText(_ view: EditBoardView) {
+        editDoneButton.isHidden = false
+        didSelectText(nil)
+    }
+    
+    func didSelectDone(_ view: EditBoardView) {
+        trimPlayView.isHidden = true
+        trimPlayerView.removeFromSuperview()
+        backButtonPressed(backButton)
+    }
+}
+
+// MARK: - CropViewDelegate
+extension EditViewController: CropViewDelegate {
+    func didSelectRotate() {
+        let media = ProjectManager.current.medias[selectedMediaIndex]
+        do {
+            try sharedRealm.write {
+                var degree = media.degree + 90.0
+                if degree >= 360.0 {
+                    degree -= 360.0
+                }
+                media.degree = degree
+                let rotateTransform = CGAffineTransform.identity.rotated(by: .pi / 2.0)
+                let transform = NSCoder.cgAffineTransform(for: media.transform).concatenating(rotateTransform)
+                media.transform = NSCoder.string(for: transform)
+                thumbImageView.transform = transform.concatenating(NSCoder.cgAffineTransform(for: media.contentTransform))
+
+                blurImageView.transform = .identity
+                blurImageView.frame = CGRect(x: 0, y: 0, width: videoView.frame.width, height: videoView.frame.height)
+                if media.degree == 90 || media.degree == 270 {
+                    blurImageView.frame = CGRect(x: 0, y: 0, width: videoView.frame.height, height: videoView.frame.width)
+                }
+                let angle = media.degree * .pi / 180.0
+                let rotatedTransform = CGAffineTransform.identity.rotated(by: CGFloat(angle))
+                blurImageView.transform = blurImageView.transform.concatenating(rotatedTransform)
+
+                if media.isHorizontalFlip {
+                    if media.degree == 0 || media.degree == 180 {
+                        let flipTransform = CGAffineTransform.identity.scaledBy(x: -1.0, y: 1.0)
+                        blurImageView.transform = blurImageView.transform.concatenating(flipTransform)
+                    } else if media.degree == 90 || media.degree == 270 {
+                        let flipTransform = CGAffineTransform.identity.scaledBy(x: 1.0, y: -1.0)
+                        blurImageView.transform = blurImageView.transform.concatenating(flipTransform)
+                    }
+                }
+                if media.isVerticalFlip {
+                    if media.degree == 0 || media.degree == 180 {
+                        let flipTransform = CGAffineTransform.identity.scaledBy(x: 1.0, y: -1.0)
+                        blurImageView.transform = blurImageView.transform.concatenating(flipTransform)
+                    } else if media.degree == 90 || media.degree == 270 {
+                        let flipTransform = CGAffineTransform.identity.scaledBy(x: -1.0, y: 1.0)
+                        blurImageView.transform = blurImageView.transform.concatenating(flipTransform)
+                    }
+                }
+                blurImageView.center = CGPoint(x: videoView.frame.width / 2.0, y: videoView.frame.height / 2.0)
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+    
+    func didSelectFlip() {
+        let media = ProjectManager.current.medias[selectedMediaIndex]
+        do {
+            try sharedRealm.write {
+                if media.degree == 0 || media.degree == 180 {
+                    media.isHorizontalFlip = !media.isHorizontalFlip
+                }
+                if media.degree == 90 || media.degree == 270 {
+                    media.isVerticalFlip = !media.isVerticalFlip
+                }
+
+                let flipTransform = CGAffineTransform.identity.scaledBy(x: -1.0, y: 1.0)
+                let transform = NSCoder.cgAffineTransform(for: media.transform).concatenating(flipTransform)
+                media.transform = NSCoder.string(for: transform)
+                thumbImageView.transform = transform.concatenating(NSCoder.cgAffineTransform(for: media.contentTransform))
+
+                let blurTransform = blurImageView.transform
+                blurImageView.transform = blurTransform.concatenating(flipTransform)
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+    
+    func didSelectFill() {
+        var contentType = ContentType(rawValue: ProjectManager.current.contentType)!
+        if contentType == .scaleFit {
+            contentType = .scaleFill
+        } else {
+            contentType = .scaleFit
+        }
+        didChangeContentType(contentType)
+    }
+    
+    func didSelectClose() {
+        backButtonPressed(backButton)
+    }
+    
+    func loadProject() {
+        ProjectManager.current.project { project in
+//            let settings = SSProjectSettings()
+//            project.settings = settings
+//            self.previewController = nil
+//            self.previewController = SSPlayerController(player: self.previewPlayerView, andProject: project)
+//            self.previewController.editViewCtrl = self
+//            self.previewPlayerView.isHidden = false
+//            self.previewPlayerView.alpha = 1.0
+//            self.previewController.play()
+//            self.playButton.isSelected = true
+        }
+    }
+    
+    @objc func showCurrentView(_ currentIndex0: Int) {
+        
+        if currentPlayViewIndex != currentIndex0 {
+            
+            do {
+                let currentIndex = self.mediaViews.count - 1 - currentPlayViewIndex
+                let prevIndex = self.mediaViews.count - 1 - currentIndex0
+
+                let _tempView = try self.mediaViews[currentIndex]
+                if try self.mediaViews[prevIndex].tag == 10 {
+                    self.mediaVideos[prevIndex].play()
+                    
+                }
+                
+                _tempView.alpha = 0
+                UIView.transition(with: _tempView,
+                                  duration: 2,
+                                  options: .transitionFlipFromRight, // transitions[currentPlayViewIndex % transitions.count], transitionCurlUp
+                                  animations: {
+                              },
+                                  completion: {_ in
+                              })
+                
+                currentPlayViewIndex = currentIndex0
+            } catch {
+
+            }
+        }
+    }
+    
+    @objc func viewPlayViewHide(_ isHidden: Bool) {
+        if !isHidden {
+            self.viewPlayerView.alpha = 1
+        }
+    }
+}

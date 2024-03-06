@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="20037" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina5_5" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="20020"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <customFonts key="customFonts">
+        <array key="Poppins-Bold.ttf">
+            <string>Poppins-Bold</string>
+        </array>
+        <array key="Poppins-Medium.ttf">
+            <string>Poppins-Medium</string>
+        </array>
+    </customFonts>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="TimeView" customModule="SlideShow" customModuleProvider="target">
+            <rect key="frame" x="0.0" y="0.0" width="414" height="200"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Photos duration" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dIz-7E-HNb">
+                    <rect key="frame" x="30" y="108" width="96" height="16"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="16" id="b6m-Yz-gHI"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" name="Poppins-Medium" family="Poppins" pointSize="12"/>
+                    <color key="textColor" red="0.70980392160000005" green="0.70980392160000005" blue="0.70980392160000005" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="3.0s" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="fQl-VC-DKE">
+                    <rect key="frame" x="30.000000000000004" y="132" width="50.333333333333343" height="33.666666666666657"/>
+                    <fontDescription key="fontDescription" name="Poppins-Bold" family="Poppins" pointSize="24"/>
+                    <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Slideshow duration" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="z6h-li-w7G">
+                    <rect key="frame" x="268" y="108" width="116" height="16"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="16" id="RMv-HU-qlI"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" name="Poppins-Medium" family="Poppins" pointSize="12"/>
+                    <color key="textColor" red="0.70980392160000005" green="0.70980392160000005" blue="0.70980392160000005" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="15.0s" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="cJu-aL-Poi">
+                    <rect key="frame" x="323.33333333333331" y="132" width="60.666666666666686" height="33.666666666666657"/>
+                    <fontDescription key="fontDescription" name="Poppins-Bold" family="Poppins" pointSize="24"/>
+                    <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="4" minValue="1" maxValue="10" translatesAutoresizingMaskIntoConstraints="NO" id="OqW-jn-09T">
+                    <rect key="frame" x="28" y="46" width="358" height="31"/>
+                    <color key="minimumTrackTintColor" red="0.16078431369999999" green="0.93725490199999995" blue="0.96470588239999999" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                    <color key="maximumTrackTintColor" red="0.4039215686" green="0.47058823529999999" blue="0.63921568630000003" alpha="1" colorSpace="calibratedRGB"/>
+                    <connections>
+                        <action selector="timeSliderChanged:" destination="iN0-l3-epB" eventType="valueChanged" id="bLX-zS-wAS"/>
+                    </connections>
+                </slider>
+                <button hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ZWV-Bs-oCx">
+                    <rect key="frame" x="308" y="43" width="36" height="36"/>
+                    <constraints>
+                        <constraint firstAttribute="width" constant="36" id="I1r-It-xQS"/>
+                        <constraint firstAttribute="height" constant="36" id="yVo-yR-p9R"/>
+                    </constraints>
+                    <state key="normal" image="LockIcon"/>
+                    <connections>
+                        <action selector="lockButtonPressed:" destination="iN0-l3-epB" eventType="touchUpInside" id="kgd-Bh-P9d"/>
+                    </connections>
+                </button>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <constraints>
+                <constraint firstItem="fQl-VC-DKE" firstAttribute="top" secondItem="dIz-7E-HNb" secondAttribute="bottom" constant="8" id="41j-S8-xF7"/>
+                <constraint firstItem="OqW-jn-09T" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" constant="30" id="4fB-no-1y4"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="bottom" secondItem="dIz-7E-HNb" secondAttribute="bottom" constant="76" id="5EJ-H0-yb6"/>
+                <constraint firstItem="cJu-aL-Poi" firstAttribute="centerY" secondItem="fQl-VC-DKE" secondAttribute="centerY" id="8wr-yc-Czk"/>
+                <constraint firstItem="dIz-7E-HNb" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" constant="30" id="DpC-Pj-mgd"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="OqW-jn-09T" secondAttribute="trailing" constant="30" id="Wvr-zd-z0A"/>
+                <constraint firstItem="fQl-VC-DKE" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" constant="30" id="Zsg-bt-2kA"/>
+                <constraint firstItem="OqW-jn-09T" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="46" id="cV4-WB-TeX"/>
+                <constraint firstItem="ZWV-Bs-oCx" firstAttribute="centerY" secondItem="OqW-jn-09T" secondAttribute="centerY" id="eQe-RL-fm2"/>
+                <constraint firstItem="ZWV-Bs-oCx" firstAttribute="trailing" secondItem="OqW-jn-09T" secondAttribute="trailing" constant="-40" id="lMj-fK-0KO"/>
+                <constraint firstItem="z6h-li-w7G" firstAttribute="centerY" secondItem="dIz-7E-HNb" secondAttribute="centerY" id="nda-eH-J0X"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="cJu-aL-Poi" secondAttribute="trailing" constant="30" id="x58-cD-MeO"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="z6h-li-w7G" secondAttribute="trailing" constant="30" id="yr4-dd-Bo1"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="imageDurationLabel" destination="fQl-VC-DKE" id="EFS-V9-65y"/>
+                <outlet property="lockButton" destination="ZWV-Bs-oCx" id="YZG-ab-SN3"/>
+                <outlet property="timeSlider" destination="OqW-jn-09T" id="XMe-xz-Dgp"/>
+                <outlet property="totalDurationLabel" destination="cJu-aL-Poi" id="wm5-7B-62A"/>
+            </connections>
+            <point key="canvasLocation" x="131.8840579710145" y="71.739130434782609"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="LockIcon" width="24" height="24"/>
+    </resources>
+</document>
